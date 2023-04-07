@@ -39,8 +39,8 @@ namespace SApInterface.API.Repositry
         public ProductRepositry(IConfiguration configuration)
         {
             _configuration = configuration;
-            SF0001G.LocalDBCredentialsProvider.MIntCompID = 1011;
-            SF0001G.LocalDBCredentialsProvider.GstrEnv = "Live";
+            SF0001G.LocalDBCredentialsProvider.MIntCompID = configuration.GetValue<int>("MySettings:ComId");
+            SF0001G.LocalDBCredentialsProvider.GstrEnv = configuration.GetValue<string>("MySettings:Env");
             SF0001G.GClsGeneral.GStrDBType = "SQL";
 
             SF0001G.GClsConnection_Sql.LAppType = "Web";
