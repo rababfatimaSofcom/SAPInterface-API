@@ -31,7 +31,7 @@ namespace SApInterface.API.Repositry
             {
                 return _dbManager;
             }
-            set
+            set 
             {
                 _dbManager = value;
             }
