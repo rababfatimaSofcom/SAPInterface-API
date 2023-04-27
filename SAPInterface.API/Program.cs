@@ -11,6 +11,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddScoped<ISectionRepositry, SectionRepositry>();
+builder.Services.AddScoped<IProductRepositry, ProductRepositry>();
 
 builder.Services.
     AddFluentValidation(options => options.RegisterValidatorsFromAssemblyContaining<Program>());

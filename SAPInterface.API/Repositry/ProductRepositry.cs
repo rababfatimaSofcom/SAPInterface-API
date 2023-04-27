@@ -129,55 +129,150 @@ namespace SApInterface.API.Repositry
             return sectionresponse;
         }
 
-        public string AddAsync(Product prod)
+        public string AddAsync(Product prod, DataSet Mdsdataset)
         {
             string LStrErr;
             SF0001G.GClsGeneral LClsGeneral = new SF0001G.GClsGeneral();
-            MDateTime = LClsGeneral.GFncDateTime();
+            MDateTime = DateTime.Now;
             StringBuilder insertCommand = new StringBuilder();
             StringBuilder updateCommand = new StringBuilder();
             StringBuilder deleteCommand = new StringBuilder();
             List<DbParameter> parameters = new List<DbParameter>();
 
-
-            
-            using (TransactionScope transaction = new TransactionScope())
+           
+           
+            DataTable dt=new DataTable();
+            dt = Mdsdataset.Tables["Product"];
+           
+            LStrErr = ClsFncValidate(Mdsdataset);
+            if ((LStrErr.Length) != 0)
             {
-                try
+                return LStrErr;
+            }
+            else
+            {
+                using (TransactionScope transaction = new TransactionScope())
                 {
-                    insertCommand.Append("Insert into SPBSProdPRM (PRODCODE,PRODSHTNAME,PRODLNGNAME,PRODCATECODE,");
-                    insertCommand.Append(" REGISTRATIONNO,BATCHSIZE,STATUS,STORAGECON,UNIT,");
-                    insertCommand.Append(" LASTUSER, LASTUPDATE,CREATEDBY,CREATEDON) Values(");
-                    insertCommand.Append(" @PRODCODE,@PRODSHTNAME,@PRODLNGNAME,@PRODCATECODE,");
-                    insertCommand.Append(" @REGISTRATIONNO,@BATCHSIZE,@STATUS,@STORAGECON,@UNIT,");
-                    insertCommand.Append(" @LASTUSER, @LASTUPDATE,@CREATEDBY,@CREATEDON)");
-
-                    parameters = new List<DbParameter>()
+                    try
                     {
-                    new SqlParameter() {ParameterName = "PRODCODE", DbType = DbType.String, Value = prod.ItemCode},
-                    //new SqlParameter() {ParameterName = "PRODSHTNAME", DbType = DbType.String, Value = MStrProdShtName},
-                    //new SqlParameter() {ParameterName = "PRODLNGNAME", DbType = DbType.String, Value = MStrProdLngName},
-                    //new SqlParameter() {ParameterName = "PRODCATECODE", DbType = DbType.String, Value = MStrCateCode},
-                    //new SqlParameter() {ParameterName = "REGISTRATIONNO", DbType = DbType.String, Value = MStrRegisterNo},
-                    //new SqlParameter() {ParameterName = "BATCHSIZE", DbType = DbType.String, Value = MStrBatchSize},
-                    //new SqlParameter() {ParameterName = "STATUS", DbType = DbType.String, Value = MStrStatus},
-                    //new SqlParameter() {ParameterName = "STORAGECON", DbType = DbType.String, Value = MStrStorage},
-                    //new SqlParameter() {ParameterName = "UNIT", DbType = DbType.String, Value = MStrUnit},
-                    //new SqlParameter() {ParameterName = "LASTUSER", DbType = DbType.String, Value = MStrUserID},
-                    //new SqlParameter() {ParameterName = "LASTUPDATE", DbType = DbType.DateTime, Value = MDateTime},
-                    //new SqlParameter() {ParameterName = "CREATEDBY", DbType = DbType.String, Value = MStrUserID},
-                    new SqlParameter() {ParameterName = "CREATEDON", DbType = DbType.DateTime, Value = MDateTime}
-                    };
-                    this.dbManager.ExecuteCommand(insertCommand.ToString(), parameters.ToArray());
-                    transaction.Complete();
-                }
-                catch (Exception)
-                {
+                        for (int i = 0; i < dt.Rows.Count - 1; i++)
+                        {
 
-                    transaction.Dispose();
+                            if (dt.Rows[i]["Status"].ToString()=="Y")
+                            { 
+                            insertCommand.Append("Insert into SPBSProdPRM (PRODCODE,PRODSHTNAME,PRODLNGNAME,PRODCATECODE,");
+                            insertCommand.Append(" REGISTRATIONNO,BATCHSIZE,STATUS,STORAGECON,UNIT,");
+                            insertCommand.Append(" LASTUSER, LASTUPDATE,CREATEDBY,CREATEDON) Values(");
+                            insertCommand.Append(" @PRODCODE,@PRODSHTNAME,@PRODLNGNAME,@PRODCATECODE,");
+                            insertCommand.Append(" @REGISTRATIONNO,@BATCHSIZE,@STATUS,@STORAGECON,@UNIT,");
+                            insertCommand.Append(" @LASTUSER, @LASTUPDATE,@CREATEDBY,@CREATEDON)");
+
+                                        parameters = new List<DbParameter>()
+                                {
+                                new SqlParameter() {ParameterName = "PRODCODE", DbType = DbType.String, Value = dt.Rows[i]["PRODCODE"]},
+                                new SqlParameter() {ParameterName = "PRODSHTNAME", DbType = DbType.String, Value = dt.Rows[i]["PRODSHTNAME"]},
+                                new SqlParameter() {ParameterName = "PRODLNGNAME", DbType = DbType.String, Value = dt.Rows[i]["PRODLNGNAME"]},
+                                new SqlParameter() {ParameterName = "PRODCATECODE", DbType = DbType.String, Value = dt.Rows[i]["PRODCATECODE"]},
+                                new SqlParameter() {ParameterName = "REGISTRATIONNO", DbType = DbType.String, Value = ""},
+                                new SqlParameter() {ParameterName = "BATCHSIZE", DbType = DbType.String, Value = dt.Rows[i]["BATCHSIZE"]},
+                                new SqlParameter() {ParameterName = "STATUS", DbType = DbType.String, Value = "A"},
+                                new SqlParameter() {ParameterName = "STORAGECON", DbType = DbType.String, Value = ""},
+                                new SqlParameter() {ParameterName = "UNIT", DbType = DbType.String, Value = dt.Rows[i]["UNIT"]},
+                                new SqlParameter() {ParameterName = "LASTUSER", DbType = DbType.String, Value = "SAPUSER"},
+                                new SqlParameter() {ParameterName = "LASTUPDATE", DbType = DbType.DateTime, Value = MDateTime},
+                                new SqlParameter() {ParameterName = "CREATEDBY", DbType = DbType.String, Value = "SAPUSER"},
+                                new SqlParameter() {ParameterName = "CREATEDON", DbType = DbType.DateTime, Value = MDateTime}
+                                };
+                                        this.dbManager.ExecuteCommand(insertCommand.ToString(), parameters.ToArray());
+                                    }
+                            }
+                        transaction.Complete();
+                    }
+                    catch (Exception)
+                    {
+
+                        transaction.Dispose();
+                    }
+
+
                 }
+            }
+            return "";
+        }
+
+        public string ClsFncValidate(DataSet Mdsdataset)
+        {
+            try
+            {
+               
+              
+             
+                    string Lstr_1stApprove = string.Empty;
+                    string Lstr_2ndApprove;
+                    string Lstr_1stReject;
+                    string Lstr_2ndReject = string.Empty;
+                    int Lint_StartValue = 0;
+                    int Lint_EndValue = 0;
+
+                    for (int Lint_Loop = 0; Lint_Loop <= Mdsdataset.Tables["Product"].Rows.Count - 1; Lint_Loop++)
+                    {
+                    if (string.IsNullOrEmpty(Mdsdataset.Tables["Product"].Rows[Lint_Loop]["PRODCODE"].ToString()))
+                    {
+
+                        Mdsdataset.Tables["Product"].Rows[Lint_Loop]["Status"] = "N";
+                        Mdsdataset.Tables["Product"].AcceptChanges();
+
+                    }
+                    else if (string.IsNullOrEmpty(Mdsdataset.Tables["Product"].Rows[Lint_Loop]["PRODSHTNAME"].ToString()))
+                    {
+
+                        Mdsdataset.Tables["Product"].Rows[Lint_Loop]["Status"] = "N";
+                        Mdsdataset.Tables["Product"].AcceptChanges();
+                    }
+                    else if (string.IsNullOrEmpty(Mdsdataset.Tables["Product"].Rows[Lint_Loop]["PRODLNGNAME"].ToString()))
+                    {
+
+                        Mdsdataset.Tables["Product"].Rows[Lint_Loop]["Status"] = "N";
+                        Mdsdataset.Tables["Product"].AcceptChanges();
+                    }
+                    else if (string.IsNullOrEmpty(Mdsdataset.Tables["Product"].Rows[Lint_Loop]["PRODCATECODE"].ToString()))
+                    {
+
+                        Mdsdataset.Tables["Product"].Rows[Lint_Loop]["Status"] = "N";
+                        Mdsdataset.Tables["Product"].AcceptChanges();
+                    }
+                    else if (string.IsNullOrEmpty(Mdsdataset.Tables["Product"].Rows[Lint_Loop]["BATCHSIZE"].ToString()))
+                    {
+
+                        Mdsdataset.Tables["Product"].Rows[Lint_Loop]["Status"] = "N";
+                        Mdsdataset.Tables["Product"].AcceptChanges();
+                    }
+                    
+                    StringBuilder selectCommand = new StringBuilder();
+                    DataTable dt = new DataTable();
+
+                    selectCommand.Append("Select * from SPBSProdPRM ");
+                    selectCommand.Append("  where ProdCode = @ProdCode");
                    
-                
+
+                    List<DbParameter> dbParameters = new List<DbParameter>()
+                    {
+                        new SqlParameter() {ParameterName = "ProdCode", Value =  Mdsdataset.Tables["Product"].Rows[Lint_Loop]["PRODCODE"]}
+                    };
+                    dt = this.dbManager.FetchData(selectCommand.ToString(), dbParameters.ToArray());
+
+                    if (dt.Rows.Count > 0)
+                    {
+                        Mdsdataset.Tables["Product"].Rows[Lint_Loop]["Status"] = "N";
+                        Mdsdataset.Tables["Product"].AcceptChanges();
+                    }
+
+                  
+                }
+            }
+            catch (Exception)
+            {
+                return "";
             }
             return "";
         }

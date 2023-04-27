@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System.Data;
+using System.Drawing;
 using System.Runtime.InteropServices;
 
 namespace SApInterface.API.Model.Domain
@@ -17,7 +18,7 @@ namespace SApInterface.API.Model.Domain
 
         public string Unit { get; set; }
 
-
+        public DataSet ds { get; set; }
 
 
     }
